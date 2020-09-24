@@ -9,7 +9,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import scipy
+import scipy.signal as sig
+import seaborn as sns
 
 # Define constants and options
 fThresh = 50; #below this value will be set to 0.
@@ -88,6 +89,7 @@ VLRtwo = []
 sName = []
 tmpConfig = []
 
+fName = entries[0]
 ## loop through the selected files
 for file in entries:
     try:
@@ -109,8 +111,8 @@ for file in entries:
         t = np.arange(59999) / fs
         fc = 20  # Cut-off frequency of the filter
         w = fc / (fs / 2) # Normalize the frequency
-        b, a = scipy.signal.butter(4, w, 'low')
-        brakeFilt = scipy.signal.filtfilt(b, a, brakeForce)
+        b, a = sig.butter(4, w, 'low')
+        brakeFilt = sig.filtfilt(b, a, brakeForce)
         
         #find the landings and offs of the FP as vectors
         landings = findLandings(forceZ)
@@ -137,3 +139,20 @@ for file in entries:
 
 outcomes = pd.DataFrame({'Sub':list(sName), 'Config': list(tmpConfig), 'peakBrake': list(peakBrakeF),
                          'brakeImpulse': list(brakeImpulse), 'VLR': list(VLR)})
+
+outcomes[['peakBrake']] = -1 * outcomes[['peakBrake']]
+    
+ax = sns.boxplot(y='peakBrake', x='Sub', hue="Config",
+                 data=outcomes, 
+                 palette="colorblind")
+ax.set(xlabel='Condition', ylabel='Braking Force')
+
+ax2 = sns.boxplot(y='VLR', x='Sub', hue = "Config", 
+                 data=outcomes, 
+                 palette="colorblind")
+ax2.set(xlabel='Condition', ylabel='VLR')
+
+ax3 = sns.boxplot(y='brakeImpulse', x='Sub', hue = "Config", 
+                 data=outcomes, 
+                 palette="colorblind")
+ax3.set(xlabel='Condition', ylabel='brakeImpulse')
